@@ -1,3 +1,3 @@
 # Inference.AI
-Inference.AI: Medical Assistant with Retrieval-Augmented Generation (RAG)
-It is an AI-powered medical assistant designed to bridge the critical gap between raw, unstructured medical data and actionable clinical insights. Developed as a capstone project for the SEN411 Artificial Intelligence course, this system addresses the growing challenge of healthcare professional burnout caused by excessive documentation and the complexity of synthesizing patient histories.
+
+Inference.AI: Medical Assistant with Retrieval-Augmented Generation (RAG) Developed as a capstone project for the SEN411 Artificial Intelligence course, Inference.AI is a dual-purpose medical tool designed to streamline clinical workflows. Its primary function is to serve as an efficient interface for recording patient diagnoses and medical history. acting as a safeguard, the system utilizes Retrieval-Augmented Generation (RAG) to process this input and provide an instant, evidence-based "second opinion," helping clinicians validate their decisions and ensuring higher diagnostic accuracy.
