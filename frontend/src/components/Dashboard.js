@@ -1,20 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus } from 'lucide-react';
 import Header from './Header';
+import PatientProfile from './PatientProfile';
 
 const Dashboard = ({ user, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
-  const mockPatients = [
-    { id: 'P001', name: 'John Doe', age: 45, gender: 'Male', lastVisit: '2024-12-20', status: 'stable' },
-    { id: 'P002', name: 'Jane Smith', age: 62, gender: 'Female', lastVisit: '2024-12-22', status: 'monitoring' },
-    { id: 'P003', name: 'Robert Johnson', age: 38, gender: 'Male', lastVisit: '2024-12-23', status: 'stable' },
-    { id: 'P004', name: 'Maria Garcia', age: 55, gender: 'Female', lastVisit: '2024-12-24', status: 'alert' },
-  ];
+  // Fetch patients from backend when component loads
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
-  const filteredPatients = mockPatients.filter(p => 
-    p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8000/api/patients/');
+      if (!response.ok) {
+        throw new Error('Failed to fetch patients');
+      }
+      const data = await response.json();
+      setPatients(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching patients:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPatients = patients.filter(p => 
+    p.hospital_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.full_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const statusColors = {
@@ -23,7 +44,28 @@ const Dashboard = ({ user, onLogout }) => {
     alert: 'bg-red-100 text-red-700',
   };
 
+  // Calculate stats
+  const stats = {
+    total: patients.length,
+    stable: patients.filter(p => p.status === 'stable').length,
+    monitoring: patients.filter(p => p.status === 'monitoring').length,
+    alert: patients.filter(p => p.status === 'alert').length,
+  };
+
+
+  if (selectedPatient) {
+    return (
+      <PatientProfile 
+        patient={selectedPatient} 
+        onBack={() => setSelectedPatient(null)}
+        user={user}
+      />
+    );
+  }
+
   return (
+
+    
     <div className="min-h-screen bg-gray-50">
       <Header user={user} onLogout={onLogout} />
 
@@ -53,65 +95,95 @@ const Dashboard = ({ user, onLogout }) => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <p className="text-gray-600 text-sm mb-1">Total Patients</p>
-            <p className="text-2xl font-bold text-gray-900">{mockPatients.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
           </div>
           <div className="bg-green-50 rounded-xl p-4 border border-green-200 shadow-sm">
             <p className="text-green-700 text-sm mb-1">Stable</p>
-            <p className="text-2xl font-bold text-green-900">2</p>
+            <p className="text-2xl font-bold text-green-900">{stats.stable}</p>
           </div>
           <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200 shadow-sm">
             <p className="text-yellow-700 text-sm mb-1">Monitoring</p>
-            <p className="text-2xl font-bold text-yellow-900">1</p>
+            <p className="text-2xl font-bold text-yellow-900">{stats.monitoring}</p>
           </div>
           <div className="bg-red-50 rounded-xl p-4 border border-red-200 shadow-sm">
             <p className="text-red-700 text-sm mb-1">Alerts</p>
-            <p className="text-2xl font-bold text-red-900">1</p>
+            <p className="text-2xl font-bold text-red-900">{stats.alert}</p>
           </div>
         </div>
+
+        {/* Loading/Error States */}
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading patients...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <p className="text-red-700">Error: {error}</p>
+            <button 
+              onClick={fetchPatients}
+              className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         {/* Patient List */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {searchQuery ? `Search Results (${filteredPatients.length})` : 'All Patients'}
-            </h2>
-          </div>
+        {!loading && !error && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {searchQuery ? `Search Results (${filteredPatients.length})` : 'All Patients'}
+              </h2>
+            </div>
 
-          <div className="divide-y divide-gray-200">
-            {filteredPatients.map((patient) => (
-              <div
-                key={patient.id}
-                className="px-6 py-4 hover:bg-teal-50 cursor-pointer transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
-                      <span className="text-lg font-bold text-white">
-                        {patient.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900">{patient.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {patient.id} • {patient.age}y • {patient.gender}
-                      </p>
+            <div className="divide-y divide-gray-200">
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((patient) => (
+                  <div
+                    key={patient.id}
+                    onClick={() => setSelectedPatient(patient)}
+                    className="px-6 py-4 hover:bg-teal-50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+                          <span className="text-lg font-bold text-white">
+                            {patient.full_name.split(' ').map(n => n[0]).join('')}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-gray-900">{patient.full_name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {patient.hospital_number} • {patient.age}y • {patient.gender}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">Last Visit</p>
+                          <p className="text-sm font-medium text-gray-900">{patient.last_visit}</p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[patient.status]}`}>
+                          {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">Last Visit</p>
-                      <p className="text-sm font-medium text-gray-900">{patient.lastVisit}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[patient.status]}`}>
-                      {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="px-6 py-12 text-center">
+                  <p className="text-gray-500">
+                    {searchQuery ? `No patients found matching "${searchQuery}"` : 'No patients yet'}
+                  </p>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
