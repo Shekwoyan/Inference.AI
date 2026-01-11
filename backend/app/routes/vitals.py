@@ -37,7 +37,7 @@ class VitalsResponse(BaseModel):
     news2_score: int
     alert_level: str
     ai_interpretation: str = None
-    ai_recommendations: str = None
+   # ai_recommendations: str = None
     notes: str = None
     recorded_at: datetime
     recorded_by_email: str
@@ -48,15 +48,21 @@ class VitalsResponse(BaseModel):
 # Record new vitals
 @router.post("/", response_model=VitalsResponse)
 def record_vitals(vitals: VitalsCreate, db: Session = Depends(get_db)):
+    print(f"=== RECORDING VITALS FOR PATIENT {vitals.patient_id} ===")
+    
     # Check if patient exists
     patient = db.query(Patient).filter(Patient.id == vitals.patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     
+    print(f"Patient found: {patient.full_name}")
+    
     # Calculate NEWS2 score
     vitals_dict = vitals.dict()
     news2_score = calculate_news2(vitals_dict)
     alert = get_alert_level(news2_score)
+    
+    print(f"NEWS2 Score: {news2_score}, Alert Level: {alert['level']}")
     
     # Get AI interpretation
     ai_interpretation = get_vitals_interpretation(
@@ -66,6 +72,8 @@ def record_vitals(vitals: VitalsCreate, db: Session = Depends(get_db)):
         alert_level=alert
     )
     
+    print("AI interpretation generated")
+    
     # Create vitals record
     db_vitals = VitalSigns(
         **vitals_dict,
@@ -74,30 +82,52 @@ def record_vitals(vitals: VitalsCreate, db: Session = Depends(get_db)):
         ai_interpretation=ai_interpretation
     )
     
-    # Update patient status based on alert level
-    patient.status = alert['level'] if alert['level'] != 'low' else 'stable'
+    print(f"Vitals object created: {db_vitals}")
     
+    # Map alert levels to patient status
+    status_mapping = {
+        'low': 'stable',
+        'medium': 'monitoring',
+        'high': 'alert'
+    }
+    patient.status = status_mapping.get(alert['level'], 'stable')
+    
+    print(f"Patient status updated to: {patient.status}")
+    
+    # Add both to session
     db.add(db_vitals)
-    db.commit()
-    db.refresh(db_vitals)
+    db.add(patient)
     
+    print("Added to session, attempting commit...")
+    
+    try:
+        db.commit()
+        print("COMMIT SUCCESSFUL")
+        db.refresh(db_vitals)
+        print(f"Vitals saved with ID: {db_vitals.id}")
+        
+        # Verify it was actually saved
+        check = db.query(VitalSigns).filter(VitalSigns.id == db_vitals.id).first()
+        print(f"Verification query result: {check}")
+        
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR DURING COMMIT: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save vitals: {str(e)}")
+    
+    print(f"=== RETURNING VITALS ===")
     return db_vitals
-    
-    # Update patient status based on alert level
-    patient.status = alert['level'] if alert['level'] != 'low' else 'stable'
-    
-    db.add(db_vitals)
-    db.commit()
-    db.refresh(db_vitals)
-    
-    return db_vitals
-
 # Get patient's vital history
 @router.get("/patient/{patient_id}", response_model=List[VitalsResponse])
 def get_patient_vitals(patient_id: int, db: Session = Depends(get_db)):
+    print(f"=== FETCHING VITALS FOR PATIENT {patient_id} ===")
+    
     vitals = db.query(VitalSigns).filter(
         VitalSigns.patient_id == patient_id
     ).order_by(VitalSigns.recorded_at.desc()).all()
+    
+    print(f"Found {len(vitals)} vitals records")
+    
     return vitals
 
 # Get single vitals record

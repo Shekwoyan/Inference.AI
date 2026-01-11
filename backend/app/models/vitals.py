@@ -25,7 +25,7 @@ class VitalSigns(Base):
     
     # AI interpretation
     ai_interpretation = Column(Text, nullable=True)
-    ai_recommendations = Column(Text, nullable=True)
+    #ai_recommendations = Column(Text, nullable=True)
     
     # Metadata
     notes = Column(Text, nullable=True)

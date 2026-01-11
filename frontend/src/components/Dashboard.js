@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserPlus } from 'lucide-react';
 import Header from './Header';
 import PatientProfile from './PatientProfile';
+import NewPatientForm from './NewPatientForm';
 
 const Dashboard = ({ user, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -9,6 +10,7 @@ const Dashboard = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showNewPatientForm, setShowNewPatientForm] = useState(false);
 
   // Fetch patients from backend when component loads
   useEffect(() => {
@@ -85,10 +87,14 @@ const Dashboard = ({ user, onLogout }) => {
             </svg>
           </div>
           
-          <button className="flex items-center space-x-2 bg-teal-500 text-white px-6 py-3 rounded-xl hover:bg-teal-600 transition-colors font-medium shadow-lg">
-            <UserPlus className="w-5 h-5" />
-            <span>New Patient</span>
+          <button 
+          onClick={() => setShowNewPatientForm(true)}
+          className="flex items-center space-x-2 bg-teal-500 text-white px-6 py-3 rounded-xl hover:bg-teal-600 transition-colors font-medium shadow-lg"
+        >
+          <UserPlus className="w-5 h-5" />
+          <span>New Patient</span>
           </button>
+
         </div>
 
         {/* Stats Cards */}
@@ -185,6 +191,15 @@ const Dashboard = ({ user, onLogout }) => {
           </div>
         )}
       </div>
+      {/* New Patient Modal */}
+      {showNewPatientForm && (
+        <NewPatientForm
+          onClose={() => setShowNewPatientForm(false)}
+          onSuccess={(newPatient) => {
+            fetchPatients(); // Refresh patient list
+          }}
+        />
+      )}
     </div>
   );
 };
