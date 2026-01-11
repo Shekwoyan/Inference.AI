@@ -1,5 +1,5 @@
 
-#🏥 Healthcare ERP System
+Healthcare ERP System
 
 A comprehensive web-based Healthcare Enterprise Resource Planning (ERP) system designed for nurses to record patient vital signs with AI-powered interpretation and automated early warning scores.
 
