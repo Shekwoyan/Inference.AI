@@ -1,0 +1,243 @@
+import React, { useState } from 'react';
+import { Activity, Stethoscope, Pill, User, ClipboardList } from 'lucide-react';
+
+const HealthcareERP = () => {
+  const [currentView, setCurrentView] = useState('login');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Mock patient data - we'll replace this with real backend later
+  const mockPatients = [
+    { id: 'P001', name: 'John Doe', age: 45, lastVisit: '2024-12-20' },
+    { id: 'P002', name: 'Jane Smith', age: 62, lastVisit: '2024-12-22' },
+    { id: 'P003', name: 'Robert Johnson', age: 38, lastVisit: '2024-12-23' },
+  ];
+
+  const roles = [
+    { id: 'nurse', name: 'Nurse', icon: Activity, color: 'bg-teal-500' },
+    { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-teal-600' },
+    { id: 'pharmacist', name: 'Pharmacist', icon: Pill, color: 'bg-teal-700' },
+    { id: 'admin', name: 'Administrator', icon: ClipboardList, color: 'bg-teal-800' },
+  ];
+
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role);
+  };
+
+  const handleLogin = () => {
+    // Simple validation - we'll add proper auth later
+    if (credentials.username && credentials.password) {
+      setCurrentView('dashboard');
+    }
+  };
+
+  const filteredPatients = mockPatients.filter(patient => 
+    patient.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    patient.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // LOGIN VIEW
+  if (currentView === 'login') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center">
+                <Activity className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Healthcare ERP</h1>
+            <p className="text-gray-600">Select your role to continue</p>
+          </div>
+
+          {/* Role Selection */}
+          <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {roles.map((role) => {
+                const Icon = role.icon;
+                const isSelected = selectedRole?.id === role.id;
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => handleRoleSelect(role)}
+                    className={`flex flex-col items-center p-6 rounded-lg border-2 transition-all ${
+                      isSelected 
+                        ? 'border-teal-500 bg-teal-50' 
+                        : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-16 h-16 ${role.color} rounded-full flex items-center justify-center mb-3`}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{role.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Login Form */}
+            {selectedRole && (
+              <div className="space-y-4">
+                <div className="border-t border-gray-200 pt-6">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Login as <span className="font-semibold text-teal-600">{selectedRole.name}</span>
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Username or Employee ID
+                      </label>
+                      <input
+                        type="text"
+                        value={credentials.username}
+                        onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Enter your username"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        value={credentials.password}
+                        onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="Enter your password"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleLogin}
+                      className="w-full bg-teal-500 text-white py-3 rounded-lg font-medium hover:bg-teal-600 transition-colors"
+                    >
+                      Login
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <p className="text-center text-sm text-gray-500">
+            Healthcare Management System v1.0
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // NURSE DASHBOARD
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Healthcare ERP</h1>
+                <p className="text-sm text-gray-500">Nurse Dashboard</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-teal-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">{credentials.username}</span>
+              </div>
+              <button
+                onClick={() => {
+                  setCurrentView('login');
+                  setSelectedRole(null);
+                  setCredentials({ username: '', password: '' });
+                }}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Find Patient</h2>
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Patient ID or Hospital Number..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
+            <div className="absolute right-3 top-3 text-gray-400">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Patient List */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {searchQuery ? 'Search Results' : 'Recent Patients'}
+            </h2>
+          </div>
+          
+          <div className="divide-y divide-gray-200">
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((patient) => (
+                <div 
+                  key={patient.id}
+                  className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                        <span className="text-lg font-semibold text-teal-600">
+                          {patient.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900">{patient.name}</h3>
+                        <p className="text-sm text-gray-500">ID: {patient.id} • Age: {patient.age}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">Last Visit</p>
+                      <p className="text-sm font-medium text-gray-900">{patient.lastVisit}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="px-6 py-12 text-center">
+                <p className="text-gray-500">No patients found matching "{searchQuery}"</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HealthcareERP;
