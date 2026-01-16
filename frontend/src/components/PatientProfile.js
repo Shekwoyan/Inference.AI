@@ -25,7 +25,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
 
   const fetchVitalsHistory = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/vitals/patient/${patient.id}`);
+      const response = await fetch(`http://localhost:8001/api/vitals/patient/${patient.id}`);
       if (response.ok) {
         const data = await response.json();
         setVitalsHistory(data);
@@ -36,9 +36,17 @@ const PatientProfile = ({ patient, onBack, user }) => {
   };
 
   const handleVitalsSubmit = async () => {
+    // Validate required fields
+    if (!vitalsData.blood_pressure_systolic || !vitalsData.blood_pressure_diastolic ||
+      !vitalsData.heart_rate || !vitalsData.temperature ||
+      !vitalsData.respiratory_rate || !vitalsData.oxygen_saturation) {
+      alert("Please fill in all required vital signs.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/vitals/', {
+      const response = await fetch('http://localhost:8001/api/vitals/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,6 +101,54 @@ const PatientProfile = ({ patient, onBack, user }) => {
     return colors[level] || colors.low;
   };
 
+  const renderAIInterpretation = (text) => {
+    if (!text) return null;
+
+    // Split into sections based on double newlines
+    const sections = text.split('\n\n');
+
+    return (
+      <div className="mt-4 space-y-3 bg-white bg-opacity-50 rounded-lg p-2">
+        {sections.map((section, idx) => {
+          if (section.includes('POTENTIAL CLINICAL IMPLICATIONS:')) {
+            return (
+              <div key={idx} className="bg-red-50 border-l-4 border-red-500 p-3 rounded shadow-sm">
+                <p className="font-bold text-red-800 text-xs uppercase mb-1 tracking-wider">Potential Clinical Implications</p>
+                <div className="text-red-900 text-sm font-medium whitespace-pre-line">
+                  {section.replace('POTENTIAL CLINICAL IMPLICATIONS:\n', '')}
+                </div>
+              </div>
+            );
+          } else if (section.includes('RECOMMENDATIONS:')) {
+            return (
+              <div key={idx} className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded shadow-sm">
+                <p className="font-bold text-blue-800 text-xs uppercase mb-1 tracking-wider">Recommendations</p>
+                <div className="text-blue-900 text-sm whitespace-pre-line">
+                  {section.replace('RECOMMENDATIONS:\n', '')}
+                </div>
+              </div>
+            );
+          } else if (section.includes('VITAL SIGNS ANALYSIS:')) {
+            return (
+              <div key={idx} className="p-2">
+                <p className="font-bold text-gray-700 text-xs uppercase mb-1 tracking-wider">Analysis</p>
+                <div className="text-gray-800 text-sm whitespace-pre-line">
+                  {section.replace('VITAL SIGNS ANALYSIS:\n', '')}
+                </div>
+              </div>
+            );
+          } else {
+            return (
+              <div key={idx} className="text-xs text-gray-500 italic mt-2 border-t border-gray-200 pt-2">
+                {section.replace('[AI SUPPORT: Validation by clinician required]', 'Note: AI Support System - Validation by clinician required')}
+              </div>
+            );
+          }
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -100,7 +156,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button 
+              <button
                 onClick={onBack}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -113,11 +169,10 @@ const PatientProfile = ({ patient, onBack, user }) => {
                 </p>
               </div>
             </div>
-            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-              patient.status === 'stable' ? 'bg-green-100 text-green-700' :
+            <div className={`px-4 py-2 rounded-full text-sm font-medium ${patient.status === 'stable' ? 'bg-green-100 text-green-700' :
               patient.status === 'monitoring' ? 'bg-yellow-100 text-yellow-700' :
-              'bg-red-100 text-red-700'
-            }`}>
+                'bg-red-100 text-red-700'
+              }`}>
               {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
             </div>
           </div>
@@ -135,11 +190,10 @@ const PatientProfile = ({ patient, onBack, user }) => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tabId)}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                    isActive 
-                      ? 'border-teal-500 text-teal-600' 
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${isActive
+                    ? 'border-teal-500 text-teal-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   {tab}
                 </button>
@@ -151,74 +205,73 @@ const PatientProfile = ({ patient, onBack, user }) => {
 
       {/* Tab Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        
+
         {/* General Info Tab */}
-      {activeTab === 'general-info' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Patient Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Hospital Number</p>
-                <p className="text-lg font-semibold text-gray-900">{patient.hospital_number}</p>
+        {activeTab === 'general-info' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Patient Information</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Hospital Number</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.hospital_number}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Full Name</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.full_name}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Age</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.age} years</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Gender</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.gender}</p>
+                </div>
               </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Full Name</p>
-                <p className="text-lg font-semibold text-gray-900">{patient.full_name}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Age</p>
-                <p className="text-lg font-semibold text-gray-900">{patient.age} years</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Gender</p>
-                <p className="text-lg font-semibold text-gray-900">{patient.gender}</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Last Visit</p>
-                <p className="text-lg font-semibold text-gray-900">{patient.last_visit}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Current Status</p>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                  patient.status === 'stable' ? 'bg-green-100 text-green-700' :
-                  patient.status === 'monitoring' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-red-100 text-red-700'
-                }`}>
-                  {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
-                </span>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Known Allergies</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {patient.allergies || 'None'}
-                </p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Current Medications</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {patient.medications || 'None'}
-                </p>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Last Visit</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.last_visit}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Current Status</p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${patient.status === 'stable' ? 'bg-green-100 text-green-700' :
+                    patient.status === 'monitoring' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                    {patient.status.charAt(0).toUpperCase() + patient.status.slice(1)}
+                  </span>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Known Allergies</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {patient.allergies || 'None'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Current Medications</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {patient.medications || 'None'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
         {/* Vitals Tab */}
         {activeTab === 'vitals' && (
           <div className="space-y-6">
-            
+
             {/* Submit Result Alert */}
             {submitResult && (
               <div className={`rounded-xl border-l-4 p-6 ${getAlertColor(submitResult.alert_level)}`}>
@@ -229,19 +282,17 @@ const PatientProfile = ({ patient, onBack, user }) => {
                     </h3>
                     <div className="space-y-2">
                       <p className="font-medium">
-                        NEWS2 Score: {submitResult.news2_score} 
+                        NEWS2 Score: {submitResult.news2_score}
                         {submitResult.alert_level === 'high' && ' - HIGH RISK'}
                         {submitResult.alert_level === 'medium' && ' - MEDIUM RISK'}
                         {submitResult.alert_level === 'low' && ' - LOW RISK'}
                       </p>
                       {submitResult.ai_interpretation && (
-                        <div className="mt-4 text-sm whitespace-pre-line">
-                          {submitResult.ai_interpretation}
-                        </div>
+                        renderAIInterpretation(submitResult.ai_interpretation)
                       )}
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setSubmitResult(null)}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -263,7 +314,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
             ) : (
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Enter Vital Signs</h3>
-                
+
                 <div className="grid grid-cols-2 gap-6">
                   {/* Blood Pressure */}
                   <div className="col-span-2">
@@ -275,7 +326,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                         type="number"
                         placeholder="Systolic"
                         value={vitalsData.blood_pressure_systolic}
-                        onChange={(e) => setVitalsData({...vitalsData, blood_pressure_systolic: e.target.value})}
+                        onChange={(e) => setVitalsData({ ...vitalsData, blood_pressure_systolic: e.target.value })}
                         className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       />
                       <span className="text-gray-500 font-bold">/</span>
@@ -283,7 +334,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                         type="number"
                         placeholder="Diastolic"
                         value={vitalsData.blood_pressure_diastolic}
-                        onChange={(e) => setVitalsData({...vitalsData, blood_pressure_diastolic: e.target.value})}
+                        onChange={(e) => setVitalsData({ ...vitalsData, blood_pressure_diastolic: e.target.value })}
                         className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       />
                     </div>
@@ -297,7 +348,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                     <input
                       type="number"
                       value={vitalsData.heart_rate}
-                      onChange={(e) => setVitalsData({...vitalsData, heart_rate: e.target.value})}
+                      onChange={(e) => setVitalsData({ ...vitalsData, heart_rate: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
@@ -311,7 +362,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                       type="number"
                       step="0.1"
                       value={vitalsData.temperature}
-                      onChange={(e) => setVitalsData({...vitalsData, temperature: e.target.value})}
+                      onChange={(e) => setVitalsData({ ...vitalsData, temperature: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
@@ -324,7 +375,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                     <input
                       type="number"
                       value={vitalsData.respiratory_rate}
-                      onChange={(e) => setVitalsData({...vitalsData, respiratory_rate: e.target.value})}
+                      onChange={(e) => setVitalsData({ ...vitalsData, respiratory_rate: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
@@ -337,7 +388,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                     <input
                       type="number"
                       value={vitalsData.oxygen_saturation}
-                      onChange={(e) => setVitalsData({...vitalsData, oxygen_saturation: e.target.value})}
+                      onChange={(e) => setVitalsData({ ...vitalsData, oxygen_saturation: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
@@ -351,7 +402,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                       type="number"
                       step="0.1"
                       value={vitalsData.weight}
-                      onChange={(e) => setVitalsData({...vitalsData, weight: e.target.value})}
+                      onChange={(e) => setVitalsData({ ...vitalsData, weight: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
@@ -363,7 +414,7 @@ const PatientProfile = ({ patient, onBack, user }) => {
                     </label>
                     <textarea
                       value={vitalsData.notes}
-                      onChange={(e) => setVitalsData({...vitalsData, notes: e.target.value})}
+                      onChange={(e) => setVitalsData({ ...vitalsData, notes: e.target.value })}
                       rows="3"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       placeholder="Any additional observations..."
@@ -404,11 +455,10 @@ const PatientProfile = ({ patient, onBack, user }) => {
                           </p>
                           <p className="text-xs text-gray-400">By: {vital.recorded_by_email}</p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          vital.alert_level === 'high' ? 'bg-red-100 text-red-700' :
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${vital.alert_level === 'high' ? 'bg-red-100 text-red-700' :
                           vital.alert_level === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
+                            'bg-green-100 text-green-700'
+                          }`}>
                           NEWS2: {vital.news2_score}
                         </span>
                       </div>
@@ -442,89 +492,88 @@ const PatientProfile = ({ patient, onBack, user }) => {
           </div>
         )}
 
-        {/* Other tabs - placeholder */}
+        {/* History Tab */}
         {activeTab === 'history' && (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-    <h2 className="text-lg font-semibold text-gray-900 mb-6">Patient History Timeline</h2>
-    
-    <div className="space-y-4">
-      {vitalsHistory.length > 0 ? (
-        vitalsHistory.map((vital) => (
-          <div key={vital.id} className="flex space-x-4">
-            <div className="flex flex-col items-center">
-              <div className={`w-3 h-3 rounded-full ${
-                vital.alert_level === 'high' ? 'bg-red-500' :
-                vital.alert_level === 'medium' ? 'bg-yellow-500' :
-                'bg-green-500'
-              }`} />
-              <div className="w-0.5 h-full bg-gray-300 mt-2" />
-            </div>
-            
-            <div className="flex-1 pb-8">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="font-semibold text-gray-900">Vital Signs Recorded</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(vital.recorded_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    vital.alert_level === 'high' ? 'bg-red-100 text-red-700' :
-                    vital.alert_level === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-green-100 text-green-700'
-                  }`}>
-                    NEWS2: {vital.news2_score}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  BP: {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic} • 
-                  HR: {vital.heart_rate} • 
-                  Temp: {vital.temperature}°C
-                </p>
-              </div>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500 text-center py-8">No history available</p>
-      )}
-    </div>
-  </div>
-)}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Patient History Timeline</h2>
 
-       {activeTab === 'prescriptions' && (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-    <h2 className="text-lg font-semibold text-gray-900 mb-6">Current Medications</h2>
-    
-    {patient.medications ? (
-      <div className="space-y-4">
-        {patient.medications.split(',').map((med, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                <span className="text-teal-600 font-bold">💊</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900">{med.trim()}</p>
-                <p className="text-sm text-gray-500">Prescribed medication</p>
-              </div>
+            <div className="space-y-4">
+              {vitalsHistory.length > 0 ? (
+                vitalsHistory.map((vital) => (
+                  <div key={vital.id} className="flex space-x-4">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-3 h-3 rounded-full ${vital.alert_level === 'high' ? 'bg-red-500' :
+                        vital.alert_level === 'medium' ? 'bg-yellow-500' :
+                          'bg-green-500'
+                        }`} />
+                      <div className="w-0.5 h-full bg-gray-300 mt-2" />
+                    </div>
+
+                    <div className="flex-1 pb-8">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold text-gray-900">Vital Signs Recorded</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(vital.recorded_at).toLocaleString()}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${vital.alert_level === 'high' ? 'bg-red-100 text-red-700' :
+                            vital.alert_level === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                            NEWS2: {vital.news2_score}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          BP: {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic} •
+                          HR: {vital.heart_rate} •
+                          Temp: {vital.temperature}°C
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-8">No history available</p>
+              )}
             </div>
           </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-gray-500 text-center py-8">No medications recorded</p>
-    )}
-    
-    {patient.allergies && (
-      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-        <p className="text-sm font-semibold text-red-900 mb-1">⚠️ Allergies</p>
-        <p className="text-red-700">{patient.allergies}</p>
-      </div>
-    )}
-  </div>
-)}
+        )}
+
+        {/* Prescriptions Tab */}
+        {activeTab === 'prescriptions' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Current Medications</h2>
+
+            {patient.medications ? (
+              <div className="space-y-4">
+                {patient.medications.split(',').map((med, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                        <span className="text-teal-600 font-bold">💊</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">{med.trim()}</p>
+                        <p className="text-sm text-gray-500">Prescribed medication</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No medications recorded</p>
+            )}
+
+            {patient.allergies && (
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-semibold text-red-900 mb-1">⚠️ Allergies</p>
+                <p className="text-red-700">{patient.allergies}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ const Dashboard = ({ user, onLogout }) => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/patients/');
+      const response = await fetch('http://localhost:8001/api/patients/');
       if (!response.ok) {
         throw new Error('Failed to fetch patients');
       }
@@ -35,7 +35,7 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
-  const filteredPatients = patients.filter(p => 
+  const filteredPatients = patients.filter(p =>
     p.hospital_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.full_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -57,8 +57,8 @@ const Dashboard = ({ user, onLogout }) => {
 
   if (selectedPatient) {
     return (
-      <PatientProfile 
-        patient={selectedPatient} 
+      <PatientProfile
+        patient={selectedPatient}
         onBack={() => setSelectedPatient(null)}
         user={user}
       />
@@ -67,7 +67,7 @@ const Dashboard = ({ user, onLogout }) => {
 
   return (
 
-    
+
     <div className="min-h-screen bg-gray-50">
       <Header user={user} onLogout={onLogout} />
 
@@ -86,13 +86,13 @@ const Dashboard = ({ user, onLogout }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          
-          <button 
-          onClick={() => setShowNewPatientForm(true)}
-          className="flex items-center space-x-2 bg-teal-500 text-white px-6 py-3 rounded-xl hover:bg-teal-600 transition-colors font-medium shadow-lg"
-        >
-          <UserPlus className="w-5 h-5" />
-          <span>New Patient</span>
+
+          <button
+            onClick={() => setShowNewPatientForm(true)}
+            className="flex items-center space-x-2 bg-teal-500 text-white px-6 py-3 rounded-xl hover:bg-teal-600 transition-colors font-medium shadow-lg"
+          >
+            <UserPlus className="w-5 h-5" />
+            <span>New Patient</span>
           </button>
 
         </div>
@@ -127,7 +127,7 @@ const Dashboard = ({ user, onLogout }) => {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
             <p className="text-red-700">Error: {error}</p>
-            <button 
+            <button
               onClick={fetchPatients}
               className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
             >

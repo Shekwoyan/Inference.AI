@@ -16,7 +16,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/patients/', {
+      const response = await fetch('http://localhost:8001/api/patients/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
             <input
               type="text"
               value={formData.hospital_number}
-              onChange={(e) => setFormData({...formData, hospital_number: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, hospital_number: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               placeholder="e.g., P005"
               required
@@ -83,7 +83,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
             <input
               type="text"
               value={formData.full_name}
-              onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               placeholder="e.g., John Doe"
               required
@@ -99,7 +99,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
               <input
                 type="date"
                 value={formData.date_of_birth}
-                onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 required
               />
@@ -112,7 +112,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
               <input
                 type="number"
                 value={formData.age}
-                onChange={(e) => setFormData({...formData, age: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="e.g., 45"
                 required
@@ -127,7 +127,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
             </label>
             <select
               value={formData.gender}
-              onChange={(e) => setFormData({...formData, gender: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               required
             >
@@ -145,7 +145,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
             </label>
             <textarea
               value={formData.allergies}
-              onChange={(e) => setFormData({...formData, allergies: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               rows="2"
               placeholder="e.g., Penicillin, Latex"
@@ -159,7 +159,7 @@ const NewPatientForm = ({ onClose, onSuccess }) => {
             </label>
             <textarea
               value={formData.medications}
-              onChange={(e) => setFormData({...formData, medications: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               rows="2"
               placeholder="e.g., Lisinopril 10mg daily, Warfarin 5mg"
