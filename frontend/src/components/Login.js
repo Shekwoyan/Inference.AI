@@ -15,8 +15,8 @@ const Login = ({ selectedRole, onLogin, onBack }) => {
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500 rounded-2xl mb-4 shadow-lg">
-            <Activity className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-500 rounded-2xl mb-4 shadow-lg overflow-hidden">
+            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Login to Healthcare ERP</h1>
           <p className="text-gray-600">Sign in as {selectedRole?.name}</p>
@@ -29,7 +29,7 @@ const Login = ({ selectedRole, onLogin, onBack }) => {
                 <input
                   type="email"
                   value={credentials.email}
-                  onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                   placeholder="jane@example.com"
                   className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -46,7 +46,7 @@ const Login = ({ selectedRole, onLogin, onBack }) => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={credentials.password}
-                  onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                   placeholder="••••••"
                   className="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
