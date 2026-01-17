@@ -55,11 +55,14 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
 
-  if (selectedPatient) {
+ if (selectedPatient) {
     return (
       <PatientProfile 
         patient={selectedPatient} 
-        onBack={() => setSelectedPatient(null)}
+        onBack={() => {
+          setSelectedPatient(null); // 1. Close the profile
+          fetchPatients(false);     // 2. ✅FORCE REFRESH the dashboard list immediately
+        }}
         user={user}
       />
     );

@@ -10,8 +10,8 @@ const Header = ({ user, onLogout }) => {
             <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shadow-md">
               <Activity className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Healthcare ERP</h1>
+            <div className="">
+              <h1 className="text-xl font-bold text-gray-900 ">Healthcare ERP</h1>
               <p className="text-sm text-gray-500">Nurse Dashboard</p>
             </div>
           </div>

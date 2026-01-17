@@ -1,90 +1,141 @@
+import os
+import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from dotenv import load_dotenv
+
+# 1. SETUP: Load API Key
+load_dotenv()
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+
 def get_vitals_interpretation(vitals_data, patient_data, news2_score, alert_level):
     """
-    Mock AI interpretation (no API needed)
+    MAIN FUNCTION:
+    Tries to get a smart AI response using the 'latest' alias. 
+    If it fails, it falls back to your custom rule-based logic.
     """
     
-    # Extract vitals
+    # Prepare Data for AI Prompt
+    patient_info = f"{patient_data.age} year old {patient_data.gender}"
+    meds = patient_data.medications if patient_data.medications else "None"
+    allergies = patient_data.allergies if patient_data.allergies else "None"
+    
+    prompt = f"""
+    You are an expert Clinical Decision Support System. 
+    Analyze the following patient data and write a short, professional clinical assessment.
+    
+    PATIENT: {patient_info}
+    HISTORY: Meds: {meds} | Allergies: {allergies}
+    
+    VITALS:
+    - HR: {vitals_data['heart_rate']} bpm
+    - BP: {vitals_data['blood_pressure_systolic']}/{vitals_data['blood_pressure_diastolic']} mmHg
+    - Temp: {vitals_data['temperature']} C
+    - RR: {vitals_data['respiratory_rate']} /min
+    - SpO2: {vitals_data['oxygen_saturation']}%
+    
+    NEWS2 SCORE: {news2_score} (Risk Level: {alert_level['level'].upper()})
+    
+    INSTRUCTIONS:
+    - Start with a 1-sentence summary of the patient's stability.
+    - Highlight specific vital signs that are abnormal.
+    - Provide 2-3 actionable nursing recommendations.
+    - Use Markdown formatting (bolding, bullet points) for readability.
+    - Be concise (max 150 words).
+    """
+
+    try:
+        if not GOOGLE_API_KEY:
+            raise Exception("No API Key found")
+
+        # 2. Configure Model
+        # We use 'gemini-flash-latest' because it appeared explicitly in your check_models.py list
+        model = genai.GenerativeModel('gemini-flash-latest')
+        
+        # 3. SAFETY SETTINGS: Turn OFF filters
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+        }
+
+        # 4. Call Google AI
+        response = model.generate_content(prompt, safety_settings=safety_settings)
+        
+        if response.text:
+            return response.text
+        else:
+            raise Exception("Empty response from AI")
+
+    except Exception as e:
+        print(f"AI Service Unavailable ({str(e)}). Using Heuristic Fallback.")
+        return _generate_fallback_text(vitals_data, patient_data, news2_score, alert_level)
+
+def _generate_fallback_text(vitals_data, patient_data, news2_score, alert_level):
+    """
+    FALLBACK ENGINE:
+    Runs your custom rule-based logic when AI is unavailable.
+    """
+    
+    # Extract variables
     bp = f"{vitals_data['blood_pressure_systolic']}/{vitals_data['blood_pressure_diastolic']}"
     hr = vitals_data['heart_rate']
     temp = vitals_data['temperature']
-    rr = vitals_data['respiratory_rate']
     spo2 = vitals_data['oxygen_saturation']
     
-    # Generate interpretation based on NEWS2 score and vitals
+    # Initialize lists
     interpretations = []
     monitoring = []
     recommendations = []
     
-    # Temperature analysis
+    # --- YOUR LOGIC ---
+    
+    # Temperature
     if temp > 38.0:
-        interpretations.append(f"Elevated temperature ({temp}°C) indicates fever, possibly suggesting infection or inflammatory response.")
+        interpretations.append(f"Elevated temperature ({temp}°C) indicates fever.")
         monitoring.append("Monitor temperature every 2-4 hours")
-        recommendations.append("Consider checking for infection signs (redness, warmth, pain)")
     elif temp < 36.0:
-        interpretations.append(f"Low temperature ({temp}°C) may indicate hypothermia or shock.")
-        monitoring.append("Monitor temperature closely and assess circulation")
-    
-    # Blood Pressure analysis
+        interpretations.append(f"Low temperature ({temp}°C) - assess for hypothermia.")
+        
+    # Blood Pressure
     if vitals_data['blood_pressure_systolic'] > 140:
-        interpretations.append(f"Blood pressure {bp} mmHg is elevated above normal range.")
-        monitoring.append("Monitor BP regularly")
-        if patient_data.medications and 'blood pressure' not in patient_data.medications.lower():
-            recommendations.append("Consider physician review for hypertension management")
+        interpretations.append(f"BP {bp} is elevated.")
     elif vitals_data['blood_pressure_systolic'] < 90:
-        interpretations.append(f"Blood pressure {bp} mmHg is critically low, indicating possible hypotension or shock.")
-        monitoring.append("Monitor BP every 30 minutes")
+        interpretations.append(f"BP {bp} is critically low (Hypotension).")
         recommendations.append("URGENT: Notify physician immediately")
-    
-    # Heart Rate analysis
+        
+    # Heart Rate
     if hr > 100:
-        interpretations.append(f"Heart rate {hr} bpm is elevated (tachycardia).")
-        monitoring.append("Monitor heart rate and rhythm")
-        if temp > 38.0:
-            interpretations.append("Tachycardia may be related to fever.")
+        interpretations.append(f"Tachycardia detected ({hr} bpm).")
     elif hr < 60:
-        interpretations.append(f"Heart rate {hr} bpm is below normal (bradycardia).")
-        monitoring.append("Monitor heart rate closely")
-        recommendations.append("Assess if patient is on beta-blockers or other rate-controlling medications")
-    
-    # Oxygen Saturation analysis
+        interpretations.append(f"Bradycardia detected ({hr} bpm).")
+        
+    # Oxygen
     if spo2 < 94:
-        interpretations.append(f"Oxygen saturation {spo2}% is below optimal range.")
-        monitoring.append("Monitor SpO2 continuously")
-        recommendations.append("Consider supplemental oxygen and assess respiratory status")
-    
-    # NEWS2 Score interpretation
+        interpretations.append(f"Hypoxia detected (SpO2 {spo2}%).")
+        recommendations.append("Consider supplemental oxygen")
+
+    # NEWS2 Risk
     if news2_score >= 7:
-        recommendations.append("HIGH RISK: Immediate physician notification required")
-        recommendations.append("Consider ICU/HDU transfer if condition deteriorates")
+        recommendations.append("HIGH RISK: Immediate response required.")
     elif news2_score >= 5:
-        recommendations.append("MEDIUM RISK: Notify physician for review")
-        recommendations.append("Increase monitoring frequency to every 2 hours")
-    else:
-        recommendations.append("Continue routine monitoring")
+        recommendations.append("MEDIUM RISK: Urgent review required.")
+
+    # --- FORMAT OUTPUT ---
+    text = "### **Automated Fallback Assessment**\n\n"
     
-    # Patient-specific considerations
-    if patient_data.allergies:
-        recommendations.append(f"NOTE: Patient allergic to {patient_data.allergies} - avoid these medications")
-    
-    if patient_data.medications:
-        recommendations.append(f"Current medications: {patient_data.medications} - consider interactions")
-    
-    # Build formatted response
-    interpretation_text = "INTERPRETATION:\n"
     if interpretations:
-        interpretation_text += "\n".join(f"• {i}" for i in interpretations)
+        text += "**Observations:**\n" + "\n".join(f"- {i}" for i in interpretations) + "\n\n"
     else:
-        interpretation_text += "• Vital signs within acceptable ranges for patient age and condition."
+        text += "Vital signs are within normal ranges.\n\n"
     
-    interpretation_text += "\n\nMONITORING:\n"
     if monitoring:
-        interpretation_text += "\n".join(f"• {m}" for m in monitoring)
-    else:
-        interpretation_text += "• Continue standard monitoring protocols"
+        text += "**Monitoring Plan:**\n" + "\n".join(f"- {m}" for m in monitoring) + "\n\n"
+        
+    if recommendations:
+        text += "**Recommendations:**\n" + "\n".join(f"- {r}" for r in recommendations)
     
-    interpretation_text += "\n\nRECOMMENDATIONS:\n"
-    interpretation_text += "\n".join(f"• {r}" for r in recommendations)
-    
-    interpretation_text += "\n\n[Note: This is an automated clinical decision support tool. Always use clinical judgment and consult physician when concerned.]"
-    
-    return interpretation_text
+    return text

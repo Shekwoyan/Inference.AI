@@ -30,7 +30,7 @@ const Login = ({ selectedRole, onLogin, onBack }) => {
                   type="email"
                   value={credentials.email}
                   onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-                  placeholder="jane@example.com"
+                  placeholder="staff.nurse01@healthsystem.net"
                   className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
                 <div className="absolute left-3 top-3.5 text-gray-400">
