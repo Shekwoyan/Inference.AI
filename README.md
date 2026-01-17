@@ -11,44 +11,42 @@ A comprehensive web-based Healthcare Enterprise Resource Planning (ERP) system d
  Features
 
 Core Functionality
-- 🔐 **Role-Based Access** - Login as Nurse, Doctor, or Pharmacist
-- 👥 **Patient Management** - Create, view, search, and manage patient records
-- 📊 **Vital Signs Recording** - Digital capture of:
+- 🔐 Role-Based Access - Login as Nurse, Doctor, or Pharmacist
+- 👥 Patient Management - Create, view, search, and manage patient records
+- 📊 Vital Signs Recording - Digital capture of:
   - Blood Pressure
   - Heart Rate
   - Temperature
   - Respiratory Rate
   - Oxygen Saturation
   - Weight
-- 🤖 **AI-Powered Interpretation** - Intelligent analysis of vital signs
-- 📈 **NEWS2 Score Calculation** - Automated National Early Warning Score
-- 🚨 **Real-Time Risk Alerts** - Color-coded status (Green/Yellow/Red)
-- 📜 **Complete History Tracking** - Timeline of all vital signs
-- 💊 **Medication & Allergy Tracking** - Patient safety information
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
+- AI-Powered Interpretation - Intelligent analysis of vital signs
+- NEWS2 Score Calculation- Automated National Early Warning Score
+- Real-Time Risk Alerts - Color-coded status (Green/Yellow/Red)
+- Complete History Tracking- Timeline of all vital signs
+- Medication & Allergy Tracking - Patient safety information
 
 Medical Intelligence
 - Automatic detection of concerning patterns
-- Context-aware recommendations based on patient history
+- Context-aware recommendations 
 - Medication interaction warnings
-- Allergy considerations in clinical decisions
 
-## 🛠️ Tech Stack
+Tech Stack
  Frontend
-- **React.js** - UI framework
-- **Tailwind CSS** - Styling
-- **Lucide React** - Icons
-- **Fetch API** - HTTP requests
+- React.js - UI framework
+- Tailwind CSS- Styling
+- Lucide React - Icons
+- Fetch API- HTTP requests
 
 Backend
-- **Python 3.12** - Programming language
-- **FastAPI** - Web framework
-- **SQLAlchemy** - ORM
-- **Pydantic** - Data validation
-- **Uvicorn** - ASGI server
+- Python 3.12 - Programming language
+- FastAPI- Web framework
+- SQLAlchemy- ORM
+- Pydantic- Data validation
+- Uvicorn- ASGI server
 
 Database
-- **SQLite** - Lightweight database (development)
+- SQLite- Lightweight database (development)
 - Can be upgraded to PostgreSQL for production
 
 AI/ML
