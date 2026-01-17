@@ -11,9 +11,9 @@ A comprehensive web-based Healthcare Enterprise Resource Planning (ERP) system d
  Features
 
 Core Functionality
-- 🔐 Role-Based Access - Login as Nurse, Doctor, or Pharmacist
-- 👥 Patient Management - Create, view, search, and manage patient records
-- 📊 Vital Signs Recording - Digital capture of:
+-  Role-Based Access - Login as Nurse, Doctor, or Pharmacist
+-  Patient Management - Create, view, search, and manage patient records
+-  Vital Signs Recording - Digital capture of:
   - Blood Pressure
   - Heart Rate
   - Temperature
@@ -51,11 +51,11 @@ Database
 
 AI/ML
 - Rule-based intelligent interpretation system
-- Ready for integration with Claude AI or OpenAI
+- integration with OpenAI
 
 ---
 
-📦 Prerequisites
+Prerequisites
 
 Before you begin, ensure you have the following installed:
 
